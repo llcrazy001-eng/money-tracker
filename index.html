@@ -214,7 +214,7 @@
                 <label>備註</label>
                 <textarea id="memo" rows="2" placeholder="這筆錢的用途..."></textarea>
             </div>
-            <button class="btn-main" id="submit-btn" onclick="saveData()">儲存至森林 🍃</button>
+            <button class="btn-main" id="submit-btn" onclick="saveData()">儲存至聚寶盆💵</button>
             <button class="btn-cancel" id="cancel-btn" style="display:none;" onclick="cancelEdit()">取消修改</button>
         </div>
     </div>
@@ -450,7 +450,7 @@
             renderUI(localData); // 立即渲染，使用者感覺秒開
         } else {
             document.getElementById('loader').style.display = 'block';
-            document.getElementById('loader').innerText = '🌿 森林正在喚醒...';
+            document.getElementById('loader').innerText = '🌿 森林正在喚醒錢錢...💰';
         }
 
         // Step 2: 在背景向 GAS 請求最新數據
