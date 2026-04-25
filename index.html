@@ -41,7 +41,6 @@
             padding-bottom: 100px;
         }
 
-        /* --- Header --- */
         header {
             background: white;
             padding: 30px 20px;
@@ -58,7 +57,6 @@
         }
         header p { font-size: 13px; color: var(--text-muted); margin: 5px 0 0; }
 
-        /* --- Tab Navigation --- */
         .nav-bar {
             position: fixed;
             bottom: 0;
@@ -85,12 +83,10 @@
         .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
         .nav-item.active { color: var(--forest-mid); font-weight: bold; }
 
-        /* --- Page Content --- */
         .page { display: none; padding: 0 20px; animation: fadeIn 0.4s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- Card Style --- */
         .card {
             background: white;
             border-radius: 24px;
@@ -109,7 +105,6 @@
             color: var(--forest-deep);
         }
 
-        /* --- Form Elements --- */
         .input-group { margin-bottom: 18px; }
         label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--text-muted); margin-left: 5px; }
         input, select, textarea {
@@ -148,7 +143,6 @@
             transform: scale(0.95);
         }
 
-        /* --- OCR Upload --- */
         .upload-box {
             border: 2px dashed var(--forest-light);
             padding: 20px;
@@ -163,7 +157,6 @@
         }
         .upload-box:hover { background: #EDF2ED; border-color: var(--forest-mid); }
 
-        /* --- Buttons --- */
         .btn-main {
             width: 100%;
             padding: 16px;
@@ -192,7 +185,6 @@
             font-size: 14px;
         }
 
-        /* --- Table --- */
         .table-wrapper { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th { text-align: left; color: var(--text-muted); padding: 12px 10px; border-bottom: 2px solid #F0F2F0; }
@@ -211,7 +203,6 @@
             margin-right: 5px;
         }
 
-        /* --- Reminder Item --- */
         .reminder-item {
             display: flex;
             justify-content: space-between;
@@ -234,7 +225,8 @@
             accent-color: var(--forest-mid);
             cursor: pointer;
         }
-        .reminder-info { font-size: 14px; }
+        .reminder-info { font-size: 14px; display: flex; flex-direction: column; }
+        .reminder-cat { font-size: 10px; color: var(--forest-mid); font-weight: bold; text-transform: uppercase; }
         .reminder-date {
             background: var(--earth-beige);
             padding: 3px 8px;
@@ -269,7 +261,7 @@
         <p>用自然的方式，紀錄生活的每一分</p>
     </header>
 
-    <!-- PAGE 1: 首頁 (分析與提醒) -->
+    <!-- PAGE 1: 首頁 -->
     <div id="page-home" class="page active">
         <div class="card">
             <div class="card-title"><i class="fa-solid fa-chart-pie"></i> 支出分佈</div>
@@ -279,7 +271,6 @@
         <div class="card">
             <div class="card-title"><i class="fa-solid fa-leaf"></i> 繳費提醒</div>
             <div id="reminders-list"></div>
-            <!-- 修改：點擊直接呼叫 addReminder() -->
             <button onclick="addReminder()" class="btn-main" style="margin-top:15px; font-size:13px; padding:10px; background: var(--forest-light);">+ 新增提醒</button>
         </div>
     </div>
@@ -366,15 +357,13 @@
 </div>
 
 <script>
-    // ==========================================
-    // 設定區：請替換為你的 GAS URL
-    // ==========================================
     const API_URL = 'https://script.google.com/macros/s/AKfycbxRA96LfcUI3cLzUiZt5ggmNkdXeSRSgMAZvSKjxQrYnQBOcJQXtVkR303SMiUki7o6/exec'; 
 
+    // 更新類別清單：新增「稅務」，並讓提醒與支出共享類別
     const CATEGORIES_MAP = {
-        '支出': ['美食', '交通', '購物', '娛樂', '居家', '醫療', '其他'],
+        '支出': ['美食', '交通', '購物', '娛樂', '居家', '醫療', '稅務', '其他'],
         '收入': ['薪水', '獎金', '禮金', '其他'],
-        '提醒': []
+        '提醒': ['美食', '交通', '購物', '娛樂', '居家', '醫療', '稅務', '其他']
     };
 
     let myChart = null;
@@ -389,23 +378,19 @@
         loadData();
     };
 
-    // 【新功能】直接跳轉至提醒模式
     function addReminder() {
         switchTab('add');
         document.getElementById('type').value = '提醒';
-        handleTypeChange(); // 同時隱藏類別區塊
+        handleTypeChange(); 
     }
 
     function handleTypeChange() {
         const type = document.getElementById('type').value;
         const categorySection = document.getElementById('category-section');
         document.getElementById('category').value = '';
-        if (type === '提醒') {
-            categorySection.style.display = 'none';
-        } else {
-            categorySection.style.display = 'block';
-            renderCategoryButtons(type);
-        }
+        // 提醒現在也需要顯示類別按鈕
+        categorySection.style.display = 'block';
+        renderCategoryButtons(type);
     }
 
     function renderCategoryButtons(type) {
@@ -432,13 +417,13 @@
         document.getElementById(`nav-${tab}`).classList.add('active');
     }
 
+    // OCR 邏輯
     async function processFile(input) {
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
         const loader = document.getElementById('loader');
         loader.style.display = 'block';
         loader.innerText = '🌿 正在讀取檔案...';
-
         try {
             let imageSource;
             if (file.type === 'application/pdf') {
@@ -455,7 +440,6 @@
             } else {
                 imageSource = file;
             }
-
             loader.innerText = '🔍 正在分析發票內容...';
             const result = await Tesseract.recognize(imageSource, 'eng+chi_tra');
             const text = result.data.text;
@@ -551,6 +535,40 @@
         }
     }
 
+    // ==========================================
+    // 核心邏輯：提醒完成 $\rightarrow$ 轉為支出
+    // ==========================================
+    async function completeReminder(rowId) {
+        const item = localData.find(i => i.row === rowId);
+        if (!item) return;
+
+        // 1. 準備要轉換成「支出」的紀錄
+        const expenseRecord = {
+            action: 'add',
+            date: item.date,
+            type: '支出',
+            category: item.category || '其他',
+            amount: item.amount,
+            memo: `【提醒完成】${item.memo}`
+        };
+
+        // 2. 樂觀更新：立即將新支出加入本地快取，並刪除提醒
+        localData.unshift({ 
+            ...expenseRecord, 
+            row: localData.length + 2, 
+            id: new Date().getTime() 
+        });
+        localData = localData.filter(i => i.row !== rowId);
+        
+        renderUI(localData);
+
+        // 3. 同步到伺服器
+        // A. 新增支出紀錄
+        fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(expenseRecord) });
+        // B. 刪除原提醒紀錄
+        fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'delete', row: rowId }) });
+    }
+
     function renderUI(data) {
         const tbody = document.getElementById('data-table');
         const remList = document.getElementById('reminders-list');
@@ -576,12 +594,15 @@
             const rowId = item.row;
 
             if (type === '提醒') {
-                // 修改：增加 Checkbox，移除 category 顯示，簡化內容
+                // 修改：加入類別顯示，並將 checkbox 綁定至 completeReminder
                 const reminderHtml = `
                     <div class="reminder-item">
                         <div class="reminder-content">
-                            <input type="checkbox" class="reminder-checkbox" onchange="if(this.checked) deleteData(${rowId}, true)">
-                            <div class="reminder-info">${memo}</div>
+                            <input type="checkbox" class="reminder-checkbox" onchange="if(this.checked) completeReminder(${rowId})">
+                            <div class="reminder-info">
+                                <span class="reminder-cat">${category}</span>
+                                <span>${memo}</span>
+                            </div>
                         </div>
                         <div><span class="reminder-date">${date}</span> <span style="margin-left:10px">$${amount}</span></div>
                     </div>`;
@@ -606,10 +627,8 @@
         renderChart(chartData);
     }
 
-    // 修改：增加 skipConfirm 參數，讓打勾刪除不需要彈窗確認
-    async function deleteData(rowId, skipConfirm = false) {
-        if (!skipConfirm && !confirm('確定要刪除嗎？')) return;
-        
+    async function deleteData(rowId) {
+        if (!confirm('確定要刪除嗎？')) return;
         localData = localData.filter(i => i.row !== rowId);
         renderUI(localData);
         fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'delete', row: rowId }) });
@@ -624,7 +643,7 @@
                 labels: Object.keys(chartData),
                 datasets: [{
                     data: Object.values(chartData),
-                    backgroundColor: ['#588157', '#A3B18A', '#DAD7CD', '#3A5A40', '#BCCDBA', '#8A9A5B', '#C2B280'],
+                    backgroundColor: ['#588157', '#A3B18A', '#DAD7CD', '#3A5A40', '#BCCDBA', '#8A9A5B', '#C2B280', '#8B4513'],
                     borderWidth: 4, borderColor: '#fff'
                 }]
             },
