@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>森之記帳 🌿</title>
     
-    <!-- iPhone 捷徑圖標設定 -->
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/llcrazy001-eng/money-tracker/main/pngtree-gold-coin-cartoon-png-image_13588074.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- 外部庫 -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -18,85 +16,41 @@
     
     <style>
         :root {
-            --forest-deep: #3A5A40;
-            --forest-mid: #588157;
-            --forest-light: #A3B18A;
-            --earth-beige: #DAD7CD;
-            --bg-cream: #F9FBF9;
-            --text-main: #344E41;
-            --text-muted: #7A8D81;
-            --accent-bright: #FFD93D; 
-            --accent-blue: #6BCB77;   
+            --forest-deep: #3A5A40; --forest-mid: #588157; --forest-light: #A3B18A;
+            --earth-beige: #DAD7CD; --bg-cream: #F9FBF9; --text-main: #344E41;
+            --text-muted: #7A8D81; --accent-bright: #FFD93D; --accent-blue: #6BCB77;
             --card-shadow: 0 10px 25px rgba(58, 90, 64, 0.1);
         }
 
         body {
-            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-cream);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            -webkit-tap-highlight-color: transparent;
+            font-family: 'Noto Sans TC', -apple-system, sans-serif;
+            background-color: var(--bg-cream); color: var(--text-main);
+            margin: 0; padding: 0; display: flex; justify-content: center; -webkit-tap-highlight-color: transparent;
         }
 
-        /* RWD 容器：在手機填滿，在電腦居中且有最大寬度 */
-        .app-container {
-            width: 100%;
-            max-width: 600px; /* 稍微放寬一點，適合平板 */
-            min-height: 100vh;
-            padding-bottom: 100px;
-            box-sizing: border-box;
-        }
+        .app-container { width: 100%; max-width: 600px; min-height: 100vh; padding-bottom: 100px; box-sizing: border-box; }
 
         header {
-            background: white;
-            padding: 30px 20px;
-            text-align: center;
-            border-radius: 0 0 40px 40px;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 20px;
+            background: white; padding: 30px 20px; text-align: center; border-radius: 0 0 40px 40px;
+            box-shadow: var(--card-shadow); margin-bottom: 20px;
         }
-        header h1 { margin: 0; font-size: clamp(20px, 5vw, 26px); color: var(--forest-deep); }
+        header h1 { margin: 0; font-size: 26px; color: var(--forest-deep); }
         header p { font-size: 13px; color: var(--text-muted); margin: 5px 0 0; }
 
-        /* --- Summary Card (RWD Flex) --- */
         .summary-card {
             background: linear-gradient(135deg, var(--forest-deep), var(--forest-mid));
-            color: white;
-            border-radius: 24px;
-            padding: 25px;
-            margin: 0 20px 20px;
-            box-shadow: var(--card-shadow);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            flex-wrap: wrap; /* 允許在極小螢幕換行 */
-            gap: 20px;
+            color: white; border-radius: 24px; padding: 25px; margin: 0 20px 20px;
+            box-shadow: var(--card-shadow); display: flex; justify-content: space-around; align-items: center;
         }
-        .summary-item { text-align: center; flex: 1; min-width: 120px; }
         .summary-item p { margin: 0; font-size: 12px; opacity: 0.8; }
-        .summary-item h2 { margin: 5px 0 0; font-size: clamp(18px, 4vw, 22px); font-weight: bold; }
+        .summary-item h2 { margin: 5px 0 0; font-size: 20px; font-weight: bold; }
 
-        /* --- Nav Bar (RWD Fixed) --- */
         .nav-bar {
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 600px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: space-around;
-            padding: 15px 0;
-            border-radius: 30px 30px 0 0;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-            z-index: 100;
-            border-top: 1px solid var(--earth-beige);
-            box-sizing: border-box;
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 600px; background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px); display: flex; justify-content: space-around;
+            padding: 15px 0; border-radius: 30px 30px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+            z-index: 100; border-top: 1px solid var(--earth-beige); box-sizing: border-box;
         }
         .nav-item { text-align: center; color: var(--text-muted); cursor: pointer; transition: 0.3s; font-size: 12px; flex: 1; }
         .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
@@ -107,55 +61,41 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .card {
-            background: white;
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: var(--card-shadow);
-            border: 1px solid rgba(163, 177, 138, 0.2);
+            background: white; border-radius: 24px; padding: 20px; margin-bottom: 20px;
+            box-shadow: var(--card-shadow); border: 1px solid rgba(163, 177, 138, 0.2);
         }
-        .card-title {
-            font-weight: bold;
-            font-size: 17px;
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--forest-deep);
-        }
+        .card-title { font-weight: bold; font-size: 17px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; color: var(--forest-deep); }
 
-        /* --- RWD Form Elements --- */
         .input-group { margin-bottom: 18px; }
         label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--text-muted); margin-left: 5px; }
         input, select, textarea {
-            width: 100%; padding: 12px; border: 2px solid #F0F2F0; border-radius: 15px; box-sizing: border-box; font-size: 15px; outline: none; transition: 0.3s; color: var(--text-main);
+            width: 100%; padding: 12px; border: 2px solid #F0F2F0; border-radius: 15px;
+            box-sizing: border-box; font-size: 15px; outline: none; transition: 0.3s; color: var(--text-main);
         }
         input:focus { border-color: var(--forest-light); }
 
-        /* 適應性網格：自動根據寬度填充按鈕 */
-        .category-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); 
-            gap: 10px; 
-            margin-bottom: 15px; 
-        }
+        .category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .cat-btn {
-            padding: 10px 5px; border: 2px solid #F0F2F0; background: white; border-radius: 12px; cursor: pointer; font-size: 12px; transition: 0.2s; text-align: center;
+            padding: 10px 5px; border: 2px solid #F0F2F0; background: white; border-radius: 12px;
+            cursor: pointer; font-size: 12px; transition: 0.2s; text-align: center;
         }
         .cat-btn.active { background: var(--forest-mid); color: white; border-color: var(--forest-mid); }
 
         .upload-box {
-            border: 2px dashed var(--forest-light); padding: 20px; text-align: center; border-radius: 20px; background: #F4F7F4; cursor: pointer; margin-bottom: 20px; font-size: 13px; color: var(--forest-mid);
+            border: 2px dashed var(--forest-light); padding: 20px; text-align: center; border-radius: 20px;
+            background: #F4F7F4; cursor: pointer; margin-bottom: 20px; font-size: 13px; color: var(--forest-mid);
         }
 
         .btn-main {
-            width: 100%; padding: 16px; background: var(--forest-mid); color: white; border: none; border-radius: 18px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 15px rgba(88, 129, 87, 0.3);
+            width: 100%; padding: 16px; background: var(--forest-mid); color: white; border: none;
+            border-radius: 18px; font-size: 16px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 6px 15px rgba(88, 129, 87, 0.3); transition: 0.3s;
         }
         .btn-cancel { width: 100%; padding: 12px; background: #eee; color: #888; border: none; border-radius: 15px; margin-top: 10px; cursor: pointer; font-weight: bold; }
 
-        /* --- Reminder Items --- */
         .reminder-item {
-            display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #FFFDF0; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid var(--accent-bright);
+            display: flex; justify-content: space-between; align-items: center; padding: 15px;
+            background: #FFFDF0; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid var(--accent-bright);
         }
         .reminder-content { display: flex; align-items: center; gap: 12px; flex: 1; }
         .reminder-checkbox { width: 20px; height: 20px; accent-color: var(--forest-mid); cursor: pointer; }
@@ -163,7 +103,6 @@
         .reminder-cat { font-size: 10px; color: var(--forest-mid); font-weight: bold; }
         .reminder-date { background: var(--earth-beige); padding: 3px 8px; border-radius: 6px; font-size: 11px; color: var(--forest-deep); font-weight: bold; }
 
-        /* --- History Accordion (RWD) --- */
         .month-section { margin-bottom: 15px; border: 1px solid var(--earth-beige); border-radius: 20px; overflow: hidden; background: white; }
         .month-header {
             background: var(--earth-beige); padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--forest-deep);
@@ -171,7 +110,6 @@
         .month-content { display: none; padding: 10px; }
         .month-content.active { display: block; }
 
-        /* 表格響應式處理 */
         .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 350px; }
         th { text-align: left; color: var(--text-muted); padding: 12px 10px; border-bottom: 2px solid #F0F2F0; }
@@ -182,7 +120,9 @@
         .btn-edit { color: var(--forest-mid); border: 1px solid var(--forest-mid); background: none; border-radius: 6px; cursor: pointer; padding: 3px 7px; font-size: 11px; margin-right: 5px; }
 
         #loader {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.95); padding: 25px; border-radius: 25px; box-shadow: var(--card-shadow); z-index: 1000; text-align: center; border: 1px solid var(--forest-light);
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95); padding: 25px; border-radius: 25px;
+            box-shadow: var(--card-shadow); z-index: 1000; text-align: center; border: 1px solid var(--forest-light);
         }
     </style>
 </head>
@@ -196,7 +136,6 @@
         <p>用自然的方式，紀錄生活的每一分</p>
     </header>
 
-    <!-- PAGE 1: 首頁 -->
     <div id="page-home" class="page active">
         <div class="summary-card">
             <div class="summary-item">
@@ -225,7 +164,6 @@
         </div>
     </div>
 
-    <!-- PAGE 2: 新增記帳 -->
     <div id="page-add" class="page">
         <div class="card">
             <div class="card-title"><i class="fa-solid fa-pen-to-square"></i> 新增紀錄</div>
@@ -263,7 +201,6 @@
         </div>
     </div>
 
-    <!-- PAGE 3: 歷史紀錄 -->
     <div id="page-history" class="page">
         <div class="card">
             <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> 歷史紀錄</div>
@@ -279,7 +216,11 @@
 </div>
 
 <script>
+    // ==========================================
+    // 【重要】請在此處填入您的 Google Apps Script Web App 網址
+    // ==========================================
     const API_URL = 'https://script.google.com/macros/s/AKfycbxRA96LfcUI3cLzUiZt5ggmNkdXeSRSgMAZvSKjxQrYnQBOcJQXtVkR303SMiUki7o6/exec'; 
+
     const CATEGORIES_MAP = {
         '支出': ['美食', '交通', '購物', '娛樂', '居家', '醫療', '稅務', '其他'],
         '收入': ['薪水', '獎金', '禮金', '其他'],
@@ -310,10 +251,15 @@
         handleTypeChange();
     }
 
-    function handleTypeChange() {
+    function handleTypeChange(isManual = true) {
         const type = document.getElementById('type').value;
         const categorySection = document.getElementById('category-section');
-        document.getElementById('category').value = '';
+        
+        // 如果是手動切換類型，則清空類別。如果是 editData 觸發的，則保留類別。
+        if (isManual) {
+            document.getElementById('category').value = '';
+        }
+
         categorySection.style.display = 'block';
         renderCategoryButtons(type);
     }
@@ -322,10 +268,12 @@
         const grid = document.getElementById('cat-grid');
         grid.innerHTML = ''; 
         const categories = CATEGORIES_MAP[type] || [];
+        const currentVal = document.getElementById('category').value;
+
         categories.forEach(cat => {
             const btn = document.createElement('button');
             btn.innerText = cat;
-            btn.className = 'cat-btn';
+            btn.className = 'cat-btn' + (currentVal === cat ? ' active' : '');
             btn.onclick = () => {
                 document.getElementById('category').value = cat;
                 document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
@@ -397,10 +345,17 @@
         if (!item) return;
         document.getElementById('date').value = item.date;
         document.getElementById('type').value = item.type;
-        handleTypeChange(); 
+        
+        // 【修正】傳入 false，確保類別在編輯模式下不會被清空
+        handleTypeChange(false); 
+        
         document.getElementById('category').value = item.category || '';
         document.getElementById('amount').value = item.amount;
         document.getElementById('memo').value = item.memo;
+        
+        // 重新渲染類別按鈕以顯示正確的 active 狀態
+        renderCategoryButtons(item.type);
+
         editRowId = rowId;
         document.getElementById('submit-btn').innerText = '更新紀錄 ✨';
         document.getElementById('cancel-btn').style.display = 'block';
@@ -444,9 +399,13 @@
     async function loadData() {
         try {
             const response = await fetch(API_URL);
+            if (!response.ok) throw new Error('Fetch failed');
             localData = await response.json();
             renderUI(localData);
-        } catch (e) { console.error('讀取失敗', e); }
+        } catch (e) { 
+            console.error('讀取失敗:', e); 
+            alert('無法讀取資料，請檢查 API 網址是否正確且權限已設為「所有人」');
+        }
     }
 
     async function completeReminder(rowId) {
