@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>森之記帳 🌿</title>
     
-    <!-- iPhone 捷徑圖標設定: 建議準備一個錢幣圖標上傳至 GitHub 並替換下方網址 -->
+    <!-- iPhone 捷徑圖標設定 -->
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/llcrazy001-eng/money-tracker/main/pngtree-gold-coin-cartoon-png-image_13588074.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -25,8 +25,8 @@
             --bg-cream: #F9FBF9;
             --text-main: #344E41;
             --text-muted: #7A8D81;
-            --accent-bright: #FFD93D; /* 亮黃 - 用於提醒 */
-            --accent-blue: #6BCB77;   /* 亮綠/青 - 用於快速記帳 */
+            --accent-bright: #FFD93D; 
+            --accent-blue: #6BCB77;   
             --card-shadow: 0 10px 25px rgba(58, 90, 64, 0.1);
         }
 
@@ -59,7 +59,6 @@
         header h1 { margin: 0; font-size: 26px; color: var(--forest-deep); }
         header p { font-size: 13px; color: var(--text-muted); margin: 5px 0 0; }
 
-        /* --- Summary Card --- */
         .summary-card {
             background: linear-gradient(135deg, var(--forest-deep), var(--forest-mid));
             color: white;
@@ -74,7 +73,6 @@
         .summary-item p { margin: 0; font-size: 12px; opacity: 0.8; }
         .summary-item h2 { margin: 5px 0 0; font-size: 20px; font-weight: bold; }
 
-        /* --- Nav Bar --- */
         .nav-bar {
             position: fixed;
             bottom: 0;
@@ -116,7 +114,6 @@
             color: var(--forest-deep);
         }
 
-        /* --- Forms --- */
         .input-group { margin-bottom: 18px; }
         label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--text-muted); margin-left: 5px; }
         input, select, textarea {
@@ -139,7 +136,6 @@
         }
         .btn-cancel { width: 100%; padding: 12px; background: #eee; color: #888; border: none; border-radius: 15px; margin-top: 10px; cursor: pointer; font-weight: bold; }
 
-        /* --- Reminder Items --- */
         .reminder-item {
             display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #FFFDF0; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid var(--accent-bright);
         }
@@ -149,7 +145,6 @@
         .reminder-cat { font-size: 10px; color: var(--forest-mid); font-weight: bold; }
         .reminder-date { background: var(--earth-beige); padding: 3px 8px; border-radius: 6px; font-size: 11px; color: var(--forest-deep); font-weight: bold; }
 
-        /* --- History Accordion --- */
         .month-section { margin-bottom: 15px; border: 1px solid var(--earth-beige); border-radius: 20px; overflow: hidden; background: white; }
         .month-header {
             background: var(--earth-beige); padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--forest-deep);
@@ -180,9 +175,7 @@
         <p>用自然的方式，紀錄生活的每一分</p>
     </header>
 
-    <!-- PAGE 1: 首頁 -->
     <div id="page-home" class="page active">
-        <!-- 月度結算 -->
         <div class="summary-card">
             <div class="summary-item">
                 <p>本月收入</p>
@@ -194,26 +187,22 @@
             </div>
         </div>
 
-        <!-- 繳費提醒 (移至上方, 亮色系) -->
         <div class="card">
             <div class="card-title"><i class="fa-solid fa-leaf"></i> 繳費提醒</div>
             <div id="reminders-list"></div>
             <button onclick="addReminder()" class="btn-main" style="margin-top:15px; font-size:13px; padding:10px; background: var(--accent-bright); color: var(--forest-deep);">+ 新增提醒</button>
         </div>
 
-        <!-- 快速支出按鈕 -->
         <button onclick="quickExpense()" class="btn-main" style="margin-bottom: 20px; background: var(--accent-blue); box-shadow: 0 6px 15px rgba(107, 203, 119, 0.4);">
             <i class="fa-solid fa-bolt"></i> 快速支出紀錄
         </button>
 
-        <!-- 支出分析 (移至下方) -->
         <div class="card">
             <div class="card-title"><i class="fa-solid fa-chart-pie"></i> 支出分佈</div>
             <canvas id="analysisChart"></canvas>
         </div>
     </div>
 
-    <!-- PAGE 2: 新增記帳 -->
     <div id="page-add" class="page">
         <div class="card">
             <div class="card-title"><i class="fa-solid fa-pen-to-square"></i> 新增紀錄</div>
@@ -251,7 +240,6 @@
         </div>
     </div>
 
-    <!-- PAGE 3: 歷史紀錄 -->
     <div id="page-history" class="page">
         <div class="card">
             <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> 歷史紀錄</div>
@@ -286,6 +274,11 @@
         loadData();
     };
 
+    // 輔助：獲取今天日期 YYYY-MM-DD
+    function getTodayDate() {
+        return new Date().toISOString().split('T')[0];
+    }
+
     function addReminder() {
         switchTab('add');
         document.getElementById('type').value = '提醒';
@@ -298,10 +291,15 @@
         handleTypeChange();
     }
 
-    function handleTypeChange() {
+    // 【修正】handleTypeChange 不再強制清空類別，除非是使用者手動切換
+    function handleTypeChange(isManual = true) {
         const type = document.getElementById('type').value;
         const categorySection = document.getElementById('category-section');
-        document.getElementById('category').value = '';
+        
+        if (isManual) {
+            document.getElementById('category').value = '';
+        }
+
         categorySection.style.display = 'block';
         renderCategoryButtons(type);
     }
@@ -310,10 +308,12 @@
         const grid = document.getElementById('cat-grid');
         grid.innerHTML = ''; 
         const categories = CATEGORIES_MAP[type] || [];
+        const currentVal = document.getElementById('category').value;
+
         categories.forEach(cat => {
             const btn = document.createElement('button');
             btn.innerText = cat;
-            btn.className = 'cat-btn';
+            btn.className = 'cat-btn' + (currentVal === cat ? ' active' : '');
             btn.onclick = () => {
                 document.getElementById('category').value = cat;
                 document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
@@ -385,10 +385,17 @@
         if (!item) return;
         document.getElementById('date').value = item.date;
         document.getElementById('type').value = item.type;
-        handleTypeChange(); 
+        
+        // 【修正】呼叫 handleTypeChange 時傳入 false，不要清空類別
+        handleTypeChange(false); 
+        
         document.getElementById('category').value = item.category || '';
         document.getElementById('amount').value = item.amount;
         document.getElementById('memo').value = item.memo;
+        
+        // 強制刷新按鈕激活狀態
+        renderCategoryButtons(item.type);
+
         editRowId = rowId;
         document.getElementById('submit-btn').innerText = '更新紀錄 ✨';
         document.getElementById('cancel-btn').style.display = 'block';
@@ -437,12 +444,17 @@
         } catch (e) { console.error('讀取失敗', e); }
     }
 
+    // 【修正】提醒完成 $\rightarrow$ 紀錄日期設為今天 (完成日期)
     async function completeReminder(rowId) {
         const item = localData.find(i => i.row === rowId);
         if (!item) return;
         const expenseRecord = {
-            action: 'add', date: item.date, type: '支出',
-            category: item.category || '其他', amount: item.amount, memo: `【提醒完成】${item.memo}`
+            action: 'add', 
+            date: getTodayDate(), // 使用完成當天的日期
+            type: '支出',
+            category: item.category || '其他', 
+            amount: item.amount, 
+            memo: `【提醒完成】${item.memo}`
         };
         localData.unshift({ ...expenseRecord, row: localData.length + 2, id: new Date().getTime() });
         localData = localData.filter(i => i.row !== rowId);
@@ -452,15 +464,14 @@
     }
 
     function renderUI(data) {
+        const tbody = document.getElementById('data-table');
         const remList = document.getElementById('reminders-list');
-        const historyContainer = document.getElementById('history-accordion');
+        tbody.innerHTML = '';
         remList.innerHTML = '';
-        historyContainer.innerHTML = '';
         const chartData = {};
 
-        // --- 1. 計算本月結算 ---
         const now = new Date();
-        const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
+        const currentMonth = now.toISOString().slice(0, 7); 
         let mIncome = 0, mExpense = 0;
 
         const formatDate = (dateInput) => {
@@ -472,7 +483,6 @@
             } catch (e) { return dateInput; }
         };
 
-        // 將資料按月份分組
         const grouped = {};
 
         data.forEach(item => {
@@ -483,7 +493,6 @@
             const memo = item.memo || '';
             const rowId = item.row;
 
-            // 計算本月總額
             if (date.startsWith(currentMonth)) {
                 if (type === '收入') mIncome += amount;
                 if (type === '支出') mExpense += amount;
@@ -502,7 +511,6 @@
                         <div><span class="reminder-date">${date}</span> <span style="margin-left:10px">$${amount}</span></div>
                     </div>`;
             } else {
-                // 分組到月份
                 const month = date.substring(0, 7);
                 if (!grouped[month]) grouped[month] = [];
                 grouped[month].push(item);
@@ -515,23 +523,20 @@
 
         if (remList.innerHTML === '') remList.innerHTML = '<p style="text-align:center; color:#AAA; font-size:12px; padding:10px;">目前沒有提醒事項 🍃</p>';
 
-        // --- 2. 渲染歷史紀錄-月份折疊 ---
+        const historyContainer = document.getElementById('history-accordion');
+        historyContainer.innerHTML = '';
         const sortedMonths = Object.keys(grouped).sort().reverse();
         sortedMonths.forEach(month => {
             const section = document.createElement('div');
             section.className = 'month-section';
-            
             const header = document.createElement('div');
             header.className = 'month-header';
             header.innerHTML = `<span>${month}</span> <i class="fa-solid fa-chevron-down"></i>`;
-            
             const content = document.createElement('div');
             content.className = 'month-content' + (month === currentMonth ? ' active' : '');
-            
             const table = document.createElement('table');
             table.innerHTML = `<thead><tr><th>日期</th><th>類型</th><th>金額</th><th>操作</th></tr></thead>`;
-            const tbody = document.createElement('tbody');
-            
+            const tbodyTable = document.createElement('tbody');
             grouped[month].forEach(item => {
                 const row = document.createElement('tr');
                 const typeClass = (item.type === '收入') ? 'type-income' : 'type-expense';
@@ -544,18 +549,15 @@
                         <button class="btn-del" onclick="deleteData(${item.row})">刪除</button>
                     </td>
                 `;
-                tbody.appendChild(row);
+                tbodyTable.appendChild(row);
             });
-            
-            table.appendChild(tbody);
+            table.appendChild(tbodyTable);
             content.appendChild(table);
             header.onclick = () => content.classList.toggle('active');
-            
             section.appendChild(header);
             section.appendChild(content);
             historyContainer.appendChild(section);
         });
-
         renderChart(chartData);
     }
 
@@ -579,7 +581,10 @@
                     borderWidth: 4, borderColor: '#fff'
                 }]
             },
-            options: { plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
+            options: {
+                plugins: { legend: { position: 'bottom' } },
+                cutout: '70%'
+            }
         });
     }
 
