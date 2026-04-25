@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>森之記帳 🌿</title>
     
-    <!-- 【修正】iPhone 圖示必須使用 raw 連結 -->
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/llcrazy001-eng/money-tracker/main/gold_image.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,7 +15,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome,6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        /* ... (CSS 部分保持不變，與之前完全相同) ... */
+        /* ... (CSS 部分保持不變) ... */
         :root {
             --forest-deep: #3A5A40;
             --forest-mid: #588157;
@@ -389,8 +388,7 @@
     }
 
     /**
-     * 【優化】儲存速度優化：樂觀更新 (Optimistic UI)
-     * 先更新 UI $\rightarrow$ 切換頁面 $\rightarrow$ 背景發送請求 $\rightarrow$ 更新真實 row id
+     * 【優化】儲存速度優化：樂觀更新 (Optimistic UI) ＋ 快取同步
      */
     async function saveData() {
         const amount = document.getElementById('amount').value;
@@ -407,41 +405,67 @@
         const action = editRowId ? 'update' : 'add';
         const payload = { action, ...record, row: editRowId };
 
-        // 1. 樂觀更新：立即更新本地數據並跳轉分頁
         if (action === 'add') {
-            // 給予一個臨時 row id (例如負數)，避免與正式 row 衝突
             localData.unshift({ ...payload, row: -Math.random(), id: new Date().getTime() });
         } else {
             const idx = localData.findIndex(i => i.row === editRowId);
             localData[idx] = { ...localData[idx], ...record };
         }
         
+        // 同步更新本地快取，讓下次開啟也是秒開
+        localStorage.setItem('forest_data_cache', JSON.stringify(localData));
+        
         renderUI(localData); 
         cancelEdit();
-        switchTab('home'); // 立即跳轉，使用者感覺不到延遲
+        switchTab('home');
 
-        // 2. 背景同步：在後台發送請求
         try {
             const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
             const result = await response.json();
 
             if (action === 'add') {
-                // 將臨時 row id 替換為後端回傳的真實 row id
                 const item = localData.find(i => i.row < 0); 
                 if (item) item.row = result.row;
             }
+            // 儲存成功後，再次更新快取以同步正確的 row id
+            localStorage.setItem('forest_data_cache', JSON.stringify(localData));
         } catch (e) {
             console.error("同步失敗", e);
-            alert('⚠️ 儲存失敗，請檢查網路後嘗試再次儲存');
+            alert('⚠️ 儲存失敗，請檢查網路');
         }
     }
 
+    /**
+     * 【關鍵優化】載入邏輯優化：快取優先 (Cache First)
+     * 1. 立即讀取 localStorage
+     * 2. 立即 renderUI (秒開)
+     * 3. 背景請求 GAS 更新最新數據
+     * 4. 收到更新後靜默更新 UI
+     */
     async function loadData() {
+        // Step 1: 嘗試讀取本地快取
+        const cached = localStorage.getItem('forest_data_cache');
+        if (cached) {
+            localData = JSON.parse(cached);
+            renderUI(localData); // 立即渲染，使用者感覺秒開
+        } else {
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('loader').innerText = '🌿 森林正在喚醒...';
+        }
+
+        // Step 2: 在背景向 GAS 請求最新數據
         try {
             const response = await fetch(API_URL);
-            localData = await response.json();
-            renderUI(localData);
-        } catch (e) { console.error('讀取失敗', e); }
+            const freshData = await response.json();
+            
+            localData = freshData;
+            localStorage.setItem('forest_data_cache', JSON.stringify(freshData));
+            renderUI(localData); // 靜默更新畫面
+        } catch (e) {
+            console.error('同步失敗', e);
+        } finally {
+            document.getElementById('loader').style.display = 'none';
+        }
     }
 
     async function completeReminder(rowId) {
@@ -456,9 +480,10 @@
             memo: `【提醒完成】${item.memo}`
         };
         
-        // 樂觀更新：立即移除提醒並新增支出
         localData = localData.filter(i => i.row !== rowId);
         localData.unshift({ ...expenseRecord, row: -Math.random() });
+        
+        localStorage.setItem('forest_data_cache', JSON.stringify(localData));
         renderUI(localData);
 
         try {
@@ -468,6 +493,7 @@
             if (newItem) newItem.row = result.row;
             
             await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', row: rowId }) });
+            localStorage.setItem('forest_data_cache', JSON.stringify(localData));
         } catch (e) {
             alert('同步失敗');
         }
@@ -572,6 +598,7 @@
     async function deleteData(rowId) {
         if (!confirm('確定要刪除嗎？')) return;
         localData = localData.filter(i => i.row !== rowId);
+        localStorage.setItem('forest_data_cache', JSON.stringify(localData));
         renderUI(localData);
         try {
             await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', row: rowId }) });
