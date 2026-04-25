@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>森之記帳 🌿</title>
     
-    <link rel="apple-touch-icon" href="https://github.com/llcrazy001-eng/money-tracker/blob/main/gold_image.png">
+    <!-- 【修正】iPhone 圖示必須使用 raw 連結 -->
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/llcrazy001-eng/money-tracker/main/gold_image.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -15,6 +16,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome,6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
+        /* ... (CSS 部分保持不變，與之前完全相同) ... */
         :root {
             --forest-deep: #3A5A40;
             --forest-mid: #588157;
@@ -28,7 +30,6 @@
             --income-gold: #D4AF37;
             --card-shadow: 0 10px 25px rgba(58, 90, 64, 0.1);
         }
-
         body {
             font-family: 'Noto Sans TC', -apple-system, sans-serif;
             background-color: var(--bg-cream);
@@ -37,7 +38,6 @@
             display: flex; justify-content: center;
             -webkit-tap-highlight-color: transparent;
         }
-
         .app-container {
             width: 100%;
             max-width: 600px;
@@ -45,14 +45,12 @@
             padding-bottom: 110px;
             box-sizing: border-box;
         }
-
         header {
             background: white; padding: 30px 20px; text-align: center;
             border-radius: 0 0 40px 40px; box-shadow: var(--card-shadow); margin-bottom: 20px;
         }
         header h1 { margin: 0; font-size: 26px; color: var(--forest-deep); }
         header p { font-size: 13px; color: var(--text-muted); margin: 5px 0 0; }
-
         .summary-card {
             background: linear-gradient(135deg, var(--forest-deep), var(--forest-mid));
             color: white; border-radius: 24px; padding: 25px; margin: 0 20px 20px;
@@ -60,7 +58,6 @@
         }
         .summary-item p { margin: 0; font-size: 12px; opacity: 0.8; }
         .summary-item h2 { margin: 5px 0 0; font-size: 20px; font-weight: bold; }
-
         .nav-bar {
             position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
             width: 100%; max-width: 600px; background: rgba(255, 255, 255, 0.95);
@@ -77,21 +74,17 @@
             padding: 10px 0;
         }
         .nav-item i { font-size: 22px; }
-        
         #nav-home.active { background-color: #E8F5E9; color: var(--forest-deep); font-weight: bold; }
         #nav-add.active { background-color: #E0F2F1; color: var(--accent-blue); font-weight: bold; }
         #nav-history.active { background-color: #F5F5F5; color: #8B4513; font-weight: bold; }
-
         .page { display: none; padding: 0 20px; animation: fadeIn 0.4s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
         .card {
             background: white; border-radius: 24px; padding: 20px; margin-bottom: 20px;
             box-shadow: var(--card-shadow); border: 1px solid rgba(163, 177, 138, 0.2);
         }
         .card-title { font-weight: bold; font-size: 17px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; color: var(--forest-deep); }
-
         .input-group { margin-bottom: 18px; }
         label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--text-muted); margin-left: 5px; }
         input, select, textarea {
@@ -99,7 +92,6 @@
             box-sizing: border-box; font-size: 15px; outline: none; transition: 0.3s; color: var(--text-main);
         }
         input:focus { border-color: var(--forest-light); }
-
         .category-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); 
@@ -113,19 +105,16 @@
         .cat-btn.active.expense { background: var(--forest-mid); color: white; border-color: var(--forest-mid); }
         .cat-btn.active.income { background: var(--income-gold); color: white; border-color: var(--income-gold); }
         .cat-btn.active.reminder { background: var(--accent-bright); color: var(--forest-deep); border-color: var(--accent-bright); }
-
         .upload-box {
             border: 2px dashed var(--forest-light); padding: 20px; text-align: center; border-radius: 20px;
             background: #F4F7F4; cursor: pointer; margin-bottom: 20px; font-size: 13px; color: var(--forest-mid);
         }
-
         .btn-main {
             width: 100%; padding: 16px; background: var(--forest-mid); color: white; border: none;
             border-radius: 18px; font-size: 16px; font-weight: bold; cursor: pointer;
             box-shadow: 0 6px 15px rgba(88, 129, 87, 0.3); transition: 0.3s;
         }
         .btn-cancel { width: 100%; padding: 12px; background: #eee; color: #888; border: none; border-radius: 15px; margin-top: 10px; cursor: pointer; font-weight: bold; }
-
         .reminder-item {
             display: flex; justify-content: space-between; align-items: center; padding: 15px;
             background: #FFFDF0; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid var(--accent-bright);
@@ -135,14 +124,12 @@
         .reminder-info { font-size: 14px; display: flex; flex-direction: column; }
         .reminder-cat { font-size: 10px; color: var(--forest-mid); font-weight: bold; }
         .reminder-date { background: var(--earth-beige); padding: 3px 8px; border-radius: 6px; font-size: 11px; color: var(--forest-deep); font-weight: bold; }
-
         .month-section { margin-bottom: 15px; border: 1px solid var(--earth-beige); border-radius: 20px; overflow: hidden; background: white; }
         .month-header {
             background: var(--earth-beige); padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--forest-deep);
         }
         .month-content { display: none; padding: 10px; }
         .month-content.active { display: block; }
-
         .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 350px; }
         th { text-align: left; color: var(--text-muted); padding: 12px 10px; border-bottom: 2px solid #F0F2F0; }
@@ -151,7 +138,6 @@
         .type-expense { color: #A0522D; font-weight: bold; }
         .btn-del { color: #B22222; border: 1px solid #B22222; background: none; border-radius: 6px; cursor: pointer; padding: 3px 7px; font-size: 11px; }
         .btn-edit { color: var(--forest-mid); border: 1px solid var(--forest-mid); background: none; border-radius: 6px; cursor: pointer; padding: 3px 7px; font-size: 11px; margin-right: 5px; }
-
         #loader {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: rgba(255,255,255,0.95); padding: 25px; border-radius: 25px;
@@ -365,24 +351,15 @@
         setTimeout(() => loader.style.display = 'none', 2500);
     }
 
-    /**
-     * 修正後的金額提取邏輯：
-     * 不再限制在同一行，而是將全文平坦化，尋找關鍵字後方的數字
-     */
     function extractAmount(text) {
         const keywords = ['合計', '總計', '總額', 'TOTAL', 'AMOUNT', 'SUM'];
-        const combinedText = text.replace(/\n/g, ' '); // 將換行替換為空格，避免分行問題
-        
+        const combinedText = text.replace(/\n/g, ' '); 
         for (let key of keywords) {
             const index = combinedText.toUpperCase().indexOf(key.toUpperCase());
             if (index !== -1) {
-                // 截取關鍵字後方 30 個字元
                 const slice = combinedText.substring(index, index + 30);
                 const matches = slice.match(/\d{1,3}(,\d{3})*(\.\d+)?/g);
-                if (matches) {
-                    // 取得第一個匹配到的數字並去除逗號
-                    return parseFloat(matches[0].replace(/,/g, ''));
-                }
+                if (matches) return parseFloat(matches[0].replace(/,/g, ''));
             }
         }
         return null;
@@ -412,10 +389,8 @@
     }
 
     /**
-     * 修正後的儲存邏輯：
-     * 1. 移除前端計算 row
-     * 2. 使用 await 等待 GAS 回傳結果
-     * 3. 根據回傳的 row 更新本地數據
+     * 【優化】儲存速度優化：樂觀更新 (Optimistic UI)
+     * 先更新 UI $\rightarrow$ 切換頁面 $\rightarrow$ 背景發送請求 $\rightarrow$ 更新真實 row id
      */
     async function saveData() {
         const amount = document.getElementById('amount').value;
@@ -430,37 +405,34 @@
         };
 
         const action = editRowId ? 'update' : 'add';
-        const payload = { 
-            action: action, ...record, row: editRowId 
-        };
+        const payload = { action, ...record, row: editRowId };
 
-        const loader = document.getElementById('loader');
-        loader.style.display = 'block';
-        loader.innerText = '🍃 正在儲存至森林...';
+        // 1. 樂觀更新：立即更新本地數據並跳轉分頁
+        if (action === 'add') {
+            // 給予一個臨時 row id (例如負數)，避免與正式 row 衝突
+            localData.unshift({ ...payload, row: -Math.random(), id: new Date().getTime() });
+        } else {
+            const idx = localData.findIndex(i => i.row === editRowId);
+            localData[idx] = { ...localData[idx], ...record };
+        }
+        
+        renderUI(localData); 
+        cancelEdit();
+        switchTab('home'); // 立即跳轉，使用者感覺不到延遲
 
+        // 2. 背景同步：在後台發送請求
         try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-            const result = await response.json(); // 期待 GAS 回傳 { "row": 123, "status": "success" }
+            const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await response.json();
 
             if (action === 'add') {
-                // 使用後端回傳的真實 row id
-                localData.unshift({ ...payload, row: result.row }); 
-            } else {
-                const idx = localData.findIndex(i => i.row === editRowId);
-                localData[idx] = { ...localData[idx], ...record };
+                // 將臨時 row id 替換為後端回傳的真實 row id
+                const item = localData.find(i => i.row < 0); 
+                if (item) item.row = result.row;
             }
-            
-            renderUI(localData); 
-            cancelEdit();
-            switchTab('home');
         } catch (e) {
-            console.error(e);
-            alert('儲存失敗，請檢查後端設定或網路連線');
-        } finally {
-            loader.style.display = 'none';
+            console.error("同步失敗", e);
+            alert('⚠️ 儲存失敗，請檢查網路後嘗試再次儲存');
         }
     }
 
@@ -484,19 +456,20 @@
             memo: `【提醒完成】${item.memo}`
         };
         
+        // 樂觀更新：立即移除提醒並新增支出
+        localData = localData.filter(i => i.row !== rowId);
+        localData.unshift({ ...expenseRecord, row: -Math.random() });
+        renderUI(localData);
+
         try {
             const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(expenseRecord) });
             const result = await res.json();
+            const newItem = localData.find(i => i.row < 0);
+            if (newItem) newItem.row = result.row;
             
-            localData.unshift({ ...expenseRecord, row: result.row });
-            localData = localData.filter(i => i.row !== rowId);
-            
-            // 刪除提醒
             await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', row: rowId }) });
-            
-            renderUI(localData);
         } catch (e) {
-            alert('操作失敗');
+            alert('同步失敗');
         }
     }
 
@@ -598,10 +571,10 @@
 
     async function deleteData(rowId) {
         if (!confirm('確定要刪除嗎？')) return;
+        localData = localData.filter(i => i.row !== rowId);
+        renderUI(localData);
         try {
             await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', row: rowId }) });
-            localData = localData.filter(i => i.row !== rowId);
-            renderUI(localData);
         } catch (e) {
             alert('刪除失敗');
         }
