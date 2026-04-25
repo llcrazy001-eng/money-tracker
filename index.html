@@ -222,6 +222,18 @@
             margin-bottom: 10px;
             border-left: 4px solid var(--forest-light);
         }
+        .reminder-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        .reminder-checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--forest-mid);
+            cursor: pointer;
+        }
         .reminder-info { font-size: 14px; }
         .reminder-date {
             background: var(--earth-beige);
@@ -267,7 +279,8 @@
         <div class="card">
             <div class="card-title"><i class="fa-solid fa-leaf"></i> 繳費提醒</div>
             <div id="reminders-list"></div>
-            <button onclick="switchTab('add')" class="btn-main" style="margin-top:15px; font-size:13px; padding:10px; background: var(--forest-light);">+ 新增提醒</button>
+            <!-- 修改：點擊直接呼叫 addReminder() -->
+            <button onclick="addReminder()" class="btn-main" style="margin-top:15px; font-size:13px; padding:10px; background: var(--forest-light);">+ 新增提醒</button>
         </div>
     </div>
 
@@ -313,7 +326,6 @@
                 <textarea id="memo" rows="2" placeholder="這筆錢的用途..."></textarea>
             </div>
 
-            <!-- 儲存按鈕與取消按鈕正確放置於此 -->
             <button class="btn-main" id="submit-btn" onclick="saveData()">儲存至森林 🍃</button>
             <button class="btn-cancel" id="cancel-btn" style="display:none;" onclick="cancelEdit()">取消修改</button>
         </div>
@@ -377,6 +389,13 @@
         loadData();
     };
 
+    // 【新功能】直接跳轉至提醒模式
+    function addReminder() {
+        switchTab('add');
+        document.getElementById('type').value = '提醒';
+        handleTypeChange(); // 同時隱藏類別區塊
+    }
+
     function handleTypeChange() {
         const type = document.getElementById('type').value;
         const categorySection = document.getElementById('category-section');
@@ -413,9 +432,6 @@
         document.getElementById(`nav-${tab}`).classList.add('active');
     }
 
-    // ==========================================
-    // OCR 邏輯 (補回)
-    // ==========================================
     async function processFile(input) {
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
@@ -474,20 +490,15 @@
         return null;
     }
 
-    // ==========================================
-    // 修改功能
-    // ==========================================
     function editData(rowId) {
         const item = localData.find(i => i.row === rowId);
         if (!item) return;
-
         document.getElementById('date').value = item.date;
         document.getElementById('type').value = item.type;
         handleTypeChange(); 
         document.getElementById('category').value = item.category || '';
         document.getElementById('amount').value = item.amount;
         document.getElementById('memo').value = item.memo;
-
         editRowId = rowId;
         document.getElementById('submit-btn').innerText = '更新紀錄 ✨';
         document.getElementById('cancel-btn').style.display = 'block';
@@ -501,13 +512,9 @@
         clearForm();
     }
 
-    // ==========================================
-    // 儲存邏輯 (樂觀更新)
-    // ==========================================
     async function saveData() {
         const amount = document.getElementById('amount').value;
         if (!amount) return alert('請輸入金額唷！');
-
         const record = {
             date: document.getElementById('date').value,
             type: document.getElementById('type').value,
@@ -515,7 +522,6 @@
             amount: amount,
             memo: document.getElementById('memo').value
         };
-
         const action = editRowId ? 'update' : 'add';
         const payload = { 
             action: action, 
@@ -523,17 +529,14 @@
             row: editRowId,
             id: editRowId ? localData.find(i => i.row === editRowId).id : new Date().getTime()
         };
-
         if (action === 'add') {
             localData.unshift({ ...payload, row: localData.length + 2 }); 
         } else {
             const idx = localData.findIndex(i => i.row === editRowId);
             localData[idx] = { ...localData[idx], ...record };
         }
-
         renderUI(localData); 
         fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-
         cancelEdit();
         switchTab('home');
     }
@@ -573,11 +576,16 @@
             const rowId = item.row;
 
             if (type === '提醒') {
-                remList.innerHTML += `
+                // 修改：增加 Checkbox，移除 category 顯示，簡化內容
+                const reminderHtml = `
                     <div class="reminder-item">
-                        <div class="reminder-info"><strong>${category}</strong>: ${memo}</div>
+                        <div class="reminder-content">
+                            <input type="checkbox" class="reminder-checkbox" onchange="if(this.checked) deleteData(${rowId}, true)">
+                            <div class="reminder-info">${memo}</div>
+                        </div>
                         <div><span class="reminder-date">${date}</span> <span style="margin-left:10px">$${amount}</span></div>
                     </div>`;
+                remList.innerHTML += reminderHtml;
             } else {
                 const row = document.createElement('tr');
                 const typeClass = (type === '收入') ? 'type-income' : 'type-expense';
@@ -598,8 +606,10 @@
         renderChart(chartData);
     }
 
-    async function deleteData(rowId) {
-        if (!confirm('確定要刪除嗎？')) return;
+    // 修改：增加 skipConfirm 參數，讓打勾刪除不需要彈窗確認
+    async function deleteData(rowId, skipConfirm = false) {
+        if (!skipConfirm && !confirm('確定要刪除嗎？')) return;
+        
         localData = localData.filter(i => i.row !== rowId);
         renderUI(localData);
         fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'delete', row: rowId }) });
