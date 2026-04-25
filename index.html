@@ -471,39 +471,76 @@
         }
     }
 
-    function renderUI(data) {
-        const tbody = document.getElementById('data-table');
-        tbody.innerHTML = '';
-        const chartData = {};
-        const remList = document.getElementById('reminders-list');
-        remList.innerHTML = '';
+function renderUI(data) {
+    // 1. 獲取 DOM 元素
+    const tbody = document.getElementById('data-table');
+    const remList = document.getElementById('reminders-list');
+    
+    // 2. 清空舊資料，準備重新渲染
+    tbody.innerHTML = '';
+    remList.innerHTML = '';
+    
+    // 用於儲存圖表數據的對象 (例如: { '美食': 500, '交通': 200 })
+    const chartData = {};
 
-        data.forEach(item => {
-            if (item.type === '提醒') {
-                remList.innerHTML += `
-                    <div class="reminder-item">
-                        <div class="reminder-info"><strong>${item.category || '提醒'}</strong>: ${item.memo}</div>
-                        <div><span class="reminder-date">${item.date}</span> <span style="margin-left:10px">$${item.amount}</span></div>
-                    </div>`;
-            } else {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.date}</td>
-                    <td class="type-${item.type === '收入' ? 'income' : 'expense'}">${item.type}</td>
-                    <td>$${item.amount}</td>
-                    <td><button class="btn-del" onclick="deleteData(${item.row})">刪除</button></td>
-                `;
-                tbody.appendChild(row);
+    // 3. 遍歷所有從 Google Sheets 取得的資料
+    data.forEach(item => {
+        // --- 空值防護：如果欄位是空的，給予預設值，防止顯示 undefined ---
+        const date = item.date || '無日期';
+        const type = item.type || '未知';
+        const category = item.category || '未分類';
+        const amount = item.amount || 0;
+        const memo = item.memo || '';
+        const rowId = item.row; // 這是刪除時必須的行號
 
-                if (item.type === '支出') {
-                    chartData[item.category] = (chartData[item.category] || 0) + parseFloat(item.amount);
-                }
+        // --- 分流邏輯：判斷是「提醒」還是「交易紀錄」 ---
+        if (type === '提醒') {
+            // A. 渲染【繳費提醒】區塊
+            const reminderHtml = `
+                <div class="reminder-item">
+                    <div class="reminder-info">
+                        <strong>${category}</strong>: ${memo}
+                    </div>
+                    <div>
+                        <span class="reminder-date">${date}</span> 
+                        <span style="margin-left:10px; font-weight:bold;">$${amount}</span>
+                    </div>
+                </div>`;
+            remList.innerHTML += reminderHtml;
+
+        } else {
+            // B. 渲染【歷史紀錄】表格
+            const row = document.createElement('tr');
+            
+            // 根據類型設定顏色類別
+            const typeClass = (type === '收入') ? 'type-income' : 'type-expense';
+            
+            row.innerHTML = `
+                <td>${date}</td>
+                <td class="${typeClass}">${type}</td>
+                <td style="font-weight:bold;">$${amount}</td>
+                <td>
+                    <button class="btn-del" onclick="deleteData(${rowId})">刪除</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+
+            // C. 準備【支出分析圖表】數據 (僅計算類型為「支出」的資料)
+            if (type === '支出') {
+                // 如果該類別已存在則累加，不存在則初始化為 0
+                chartData[category] = (chartData[category] || 0) + parseFloat(amount);
             }
-        });
+        }
+    });
 
-        if (remList.innerHTML === '') remList.innerHTML = '<p style="text-align:center; color:#AAA; font-size:12px;">目前沒有提醒事項 🍃</p>';
-        renderChart(chartData);
+    // 4. 檢查提醒清單是否為空
+    if (remList.innerHTML === '') {
+        remList.innerHTML = '<p style="text-align:center; color:#AAA; font-size:12px; padding:10px;">目前沒有提醒事項 🍃</p>';
     }
+
+    // 5. 呼叫圖表渲染函數，將整理好的 chartData 傳進去
+    renderChart(chartData);
+}
 
     function renderChart(chartData) {
         const ctx = document.getElementById('analysisChart').getContext('2d');
