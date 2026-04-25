@@ -476,26 +476,43 @@ function renderUI(data) {
     const tbody = document.getElementById('data-table');
     const remList = document.getElementById('reminders-list');
     
-    // 2. 清空舊資料，準備重新渲染
+    // 2. 清空舊資料
     tbody.innerHTML = '';
     remList.innerHTML = '';
     
-    // 用於儲存圖表數據的對象 (例如: { '美食': 500, '交通': 200 })
     const chartData = {};
 
-    // 3. 遍歷所有從 Google Sheets 取得的資料
+    // --- 輔助函數：將各種奇怪的日期格式轉為 YYYY-MM-DD ---
+    const formatDate = (dateInput) => {
+        if (!dateInput) return '無日期';
+        
+        try {
+            const d = new Date(dateInput);
+            // 檢查日期是否有效
+            if (isNaN(d.getTime())) return dateInput; 
+            
+            const year = d.getFullYear();
+            // 月份從 0 開始，所以要 +1，且不足兩位要補 0
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
+        } catch (e) {
+            return dateInput; // 如果出錯，回傳原樣
+        }
+    };
+
+    // 3. 遍歷資料
     data.forEach(item => {
-        // --- 空值防護：如果欄位是空的，給予預設值，防止顯示 undefined ---
-        const date = item.date || '無日期';
+        // 使用 formatDate 函數處理日期
+        const date = formatDate(item.date); 
         const type = item.type || '未知';
         const category = item.category || '未分類';
         const amount = item.amount || 0;
         const memo = item.memo || '';
-        const rowId = item.row; // 這是刪除時必須的行號
+        const rowId = item.row;
 
-        // --- 分流邏輯：判斷是「提醒」還是「交易紀錄」 ---
         if (type === '提醒') {
-            // A. 渲染【繳費提醒】區塊
             const reminderHtml = `
                 <div class="reminder-item">
                     <div class="reminder-info">
@@ -509,10 +526,7 @@ function renderUI(data) {
             remList.innerHTML += reminderHtml;
 
         } else {
-            // B. 渲染【歷史紀錄】表格
             const row = document.createElement('tr');
-            
-            // 根據類型設定顏色類別
             const typeClass = (type === '收入') ? 'type-income' : 'type-expense';
             
             row.innerHTML = `
@@ -525,20 +539,16 @@ function renderUI(data) {
             `;
             tbody.appendChild(row);
 
-            // C. 準備【支出分析圖表】數據 (僅計算類型為「支出」的資料)
             if (type === '支出') {
-                // 如果該類別已存在則累加，不存在則初始化為 0
                 chartData[category] = (chartData[category] || 0) + parseFloat(amount);
             }
         }
     });
 
-    // 4. 檢查提醒清單是否為空
     if (remList.innerHTML === '') {
         remList.innerHTML = '<p style="text-align:center; color:#AAA; font-size:12px; padding:10px;">目前沒有提醒事項 🍃</p>';
     }
 
-    // 5. 呼叫圖表渲染函數，將整理好的 chartData 傳進去
     renderChart(chartData);
 }
 
