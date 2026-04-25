@@ -16,23 +16,39 @@
     
     <style>
         :root {
-            --forest-deep: #3A5A40; --forest-mid: #588157; --forest-light: #A3B18A;
-            --earth-beige: #DAD7CD; --bg-cream: #F9FBF9; --text-main: #344E41;
-            --text-muted: #7A8D81; --accent-bright: #FFD93D; --accent-blue: #6BCB77;
+            --forest-deep: #3A5A40;
+            --forest-mid: #588157;
+            --forest-light: #A3B18A;
+            --earth-beige: #DAD7CD;
+            --bg-cream: #F9FBF9;
+            --text-main: #344E41;
+            --text-muted: #7A8D81;
+            --accent-bright: #FFD93D; 
+            --accent-blue: #6BCB77;   
+            --income-gold: #D4AF37;
             --card-shadow: 0 10px 25px rgba(58, 90, 64, 0.1);
         }
 
         body {
             font-family: 'Noto Sans TC', -apple-system, sans-serif;
-            background-color: var(--bg-cream); color: var(--text-main);
-            margin: 0; padding: 0; display: flex; justify-content: center; -webkit-tap-highlight-color: transparent;
+            background-color: var(--bg-cream);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            display: flex; justify-content: center;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .app-container { width: 100%; max-width: 600px; min-height: 100vh; padding-bottom: 100px; box-sizing: border-box; }
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            min-height: 100vh;
+            padding-bottom: 110px;
+            box-sizing: border-box;
+        }
 
         header {
-            background: white; padding: 30px 20px; text-align: center; border-radius: 0 0 40px 40px;
-            box-shadow: var(--card-shadow); margin-bottom: 20px;
+            background: white; padding: 30px 20px; text-align: center;
+            border-radius: 0 0 40px 40px; box-shadow: var(--card-shadow); margin-bottom: 20px;
         }
         header h1 { margin: 0; font-size: 26px; color: var(--forest-deep); }
         header p { font-size: 13px; color: var(--text-muted); margin: 5px 0 0; }
@@ -45,16 +61,40 @@
         .summary-item p { margin: 0; font-size: 12px; opacity: 0.8; }
         .summary-item h2 { margin: 5px 0 0; font-size: 20px; font-weight: bold; }
 
+        /* --- Nav Bar 優化: 區塊填色與字體放大 --- */
         .nav-bar {
             position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 600px; background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px); display: flex; justify-content: space-around;
-            padding: 15px 0; border-radius: 30px 30px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+            width: 100%; max-width: 600px; background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px); display: flex; justify-content: space-around;
+            padding: 12px 10px;
+            border-radius: 30px 30px 0 0; box-shadow: 0 -8px 25px rgba(0,0,0,0.08);
             z-index: 100; border-top: 1px solid var(--earth-beige); box-sizing: border-box;
         }
-        .nav-item { text-align: center; color: var(--text-muted); cursor: pointer; transition: 0.3s; font-size: 12px; flex: 1; }
-        .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
-        .nav-item.active { color: var(--forest-mid); font-weight: bold; }
+        .nav-item {
+            text-align: center; color: var(--text-muted); cursor: pointer;
+            transition: all 0.3s ease; font-size: 15px; flex: 1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 4px; border-radius: 20px; margin: 0 5px;
+            padding: 10px 0;
+        }
+        .nav-item i { font-size: 22px; }
+        
+        /* 各分頁獨立的淺色底色填充 */
+        #nav-home.active { 
+            background-color: #E8F5E9; /* 淺森林綠 */
+            color: var(--forest-deep); 
+            font-weight: bold;
+        }
+        #nav-add.active { 
+            background-color: #E0F2F1; /* 淺青色 */
+            color: var(--accent-blue); 
+            font-weight: bold;
+        }
+        #nav-history.active { 
+            background-color: #F5F5F5; /* 淺米灰 */
+            color: #8B4513; 
+            font-weight: bold;
+        }
 
         .page { display: none; padding: 0 20px; animation: fadeIn 0.4s ease; }
         .page.active { display: block; }
@@ -74,12 +114,20 @@
         }
         input:focus { border-color: var(--forest-light); }
 
-        .category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-bottom: 15px; }
-        .cat-btn {
-            padding: 10px 5px; border: 2px solid #F0F2F0; background: white; border-radius: 12px;
-            cursor: pointer; font-size: 12px; transition: 0.2s; text-align: center;
+        /* 類別按鈕：字體加大至 14px */
+        .category-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); 
+            gap: 10px; 
+            margin-bottom: 15px; 
         }
-        .cat-btn.active { background: var(--forest-mid); color: white; border-color: var(--forest-mid); }
+        .cat-btn {
+            padding: 12px 5px; border: 2px solid #F0F2F0; background: white; border-radius: 12px;
+            cursor: pointer; font-size: 14px; transition: 0.2s; text-align: center;
+        }
+        .cat-btn.active.expense { background: var(--forest-mid); color: white; border-color: var(--forest-mid); }
+        .cat-btn.active.income { background: var(--income-gold); color: white; border-color: var(--income-gold); }
+        .cat-btn.active.reminder { background: var(--accent-bright); color: var(--forest-deep); border-color: var(--accent-bright); }
 
         .upload-box {
             border: 2px dashed var(--forest-light); padding: 20px; text-align: center; border-radius: 20px;
@@ -209,18 +257,20 @@
     </div>
 
     <nav class="nav-bar">
-        <div class="nav-item active" onclick="switchTab('home')" id="nav-home"><i class="fa-solid fa-house-chimney"></i> 首頁</div>
-        <div class="nav-item" onclick="switchTab('add')" id="nav-add"><i class="fa-solid fa-circle-plus"></i> 記帳</div>
-        <div class="nav-item" onclick="switchTab('history')" id="nav-history"><i class="fa-solid fa-list-ul"></i> 紀錄</div>
+        <div class="nav-item active" onclick="switchTab('home')" id="nav-home">
+            <i class="fa-solid fa-house-chimney"></i> <span>首頁</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('add')" id="nav-add">
+            <i class="fa-solid fa-circle-plus"></i> <span>記帳</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('history')" id="nav-history">
+            <i class="fa-solid fa-list-ul"></i> <span>紀錄</span>
+        </div>
     </nav>
 </div>
 
 <script>
-    // ==========================================
-    // 【重要】請在此處填入您的 Google Apps Script Web App 網址
-    // ==========================================
     const API_URL = 'https://script.google.com/macros/s/AKfycbxRA96LfcUI3cLzUiZt5ggmNkdXeSRSgMAZvSKjxQrYnQBOcJQXtVkR303SMiUki7o6/exec'; 
-
     const CATEGORIES_MAP = {
         '支出': ['美食', '交通', '購物', '娛樂', '居家', '醫療', '稅務', '其他'],
         '收入': ['薪水', '獎金', '禮金', '其他'],
@@ -254,12 +304,9 @@
     function handleTypeChange(isManual = true) {
         const type = document.getElementById('type').value;
         const categorySection = document.getElementById('category-section');
-        
-        // 如果是手動切換類型，則清空類別。如果是 editData 觸發的，則保留類別。
         if (isManual) {
             document.getElementById('category').value = '';
         }
-
         categorySection.style.display = 'block';
         renderCategoryButtons(type);
     }
@@ -270,14 +317,21 @@
         const categories = CATEGORIES_MAP[type] || [];
         const currentVal = document.getElementById('category').value;
 
+        let activeClass = 'active';
+        if (type === '支出') activeClass = 'active expense';
+        else if (type === '收入') activeClass = 'active income';
+        else if (type === '提醒') activeClass = 'active reminder';
+
         categories.forEach(cat => {
             const btn = document.createElement('button');
             btn.innerText = cat;
-            btn.className = 'cat-btn' + (currentVal === cat ? ' active' : '');
+            btn.className = 'cat-btn' + (currentVal === cat ? ' ' + activeClass : '');
             btn.onclick = () => {
                 document.getElementById('category').value = cat;
-                document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+                document.querySelectorAll('.cat-btn').forEach(b => {
+                    b.classList.remove('active', 'expense', 'income', 'reminder');
+                });
+                btn.classList.add(...activeClass.split(' '));
             };
             grid.appendChild(btn);
         });
@@ -345,17 +399,11 @@
         if (!item) return;
         document.getElementById('date').value = item.date;
         document.getElementById('type').value = item.type;
-        
-        // 【修正】傳入 false，確保類別在編輯模式下不會被清空
         handleTypeChange(false); 
-        
         document.getElementById('category').value = item.category || '';
         document.getElementById('amount').value = item.amount;
         document.getElementById('memo').value = item.memo;
-        
-        // 重新渲染類別按鈕以顯示正確的 active 狀態
         renderCategoryButtons(item.type);
-
         editRowId = rowId;
         document.getElementById('submit-btn').innerText = '更新紀錄 ✨';
         document.getElementById('cancel-btn').style.display = 'block';
@@ -399,13 +447,9 @@
     async function loadData() {
         try {
             const response = await fetch(API_URL);
-            if (!response.ok) throw new Error('Fetch failed');
             localData = await response.json();
             renderUI(localData);
-        } catch (e) { 
-            console.error('讀取失敗:', e); 
-            alert('無法讀取資料，請檢查 API 網址是否正確且權限已設為「所有人」');
-        }
+        } catch (e) { console.error('讀取失敗', e); }
     }
 
     async function completeReminder(rowId) {
@@ -553,7 +597,7 @@
         document.getElementById('amount').value = '';
         document.getElementById('memo').value = '';
         document.getElementById('category').value = '';
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active', 'expense', 'income', 'reminder'));
     }
 </script>
 
