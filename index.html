@@ -122,20 +122,37 @@
         .reminder-info { font-size: 14px; display: flex; flex-direction: column; }
         .reminder-cat { font-size: 10px; color: var(--forest-mid); font-weight: bold; }
         .reminder-date { background: var(--earth-beige); padding: 3px 8px; border-radius: 6px; font-size: 11px; color: var(--forest-deep); font-weight: bold; }
-        .month-section { margin-bottom: 15px; border: 1px solid var(--earth-beige); border-radius: 20px; overflow: hidden; background: white; }
+        
+        /* 歷史紀錄卡片式設計 */
+        .month-section { margin-bottom: 20px; }
         .month-header {
-            background: var(--earth-beige); padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--forest-deep);
+            background: var(--earth-beige); padding: 12px 20px; cursor: pointer; 
+            display: flex; justify-content: space-between; align-items: center; 
+            font-weight: bold; color: var(--forest-deep); border-radius: 15px;
+            margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
-        .month-content { display: none; padding: 10px; }
-        .month-content.active { display: block; }
-        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 400px; }
-        th { text-align: left; color: var(--text-muted); padding: 12px 10px; border-bottom: 2px solid #F0F2F0; }
-        td { padding: 12px 10px; border-bottom: 1px solid #F9FBF9; }
-        .type-income { color: #6B8E23; font-weight: bold; }
-        .type-expense { color: #A0522D; font-weight: bold; }
+        .month-content { display: none; gap: 12px; flex-direction: column; }
+        .month-content.active { display: flex; }
+        
+        .history-card {
+            background: white; padding: 15px; border-radius: 18px;
+            box-shadow: var(--card-shadow); border: 1px solid #F0F2F0;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: transform 0.2s;
+        }
+        .history-card:active { transform: scale(0.98); }
+        .history-left { display: flex; flex-direction: column; gap: 4px; }
+        .history-cat { font-size: 12px; color: var(--text-muted); font-weight: bold; }
+        .history-memo { font-size: 15px; color: var(--text-main); font-weight: 500; }
+        .history-date { font-size: 11px; color: #AAA; }
+        .history-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+        .history-amount { font-size: 16px; font-weight: bold; }
+        .type-income { color: #6B8E23; }
+        .type-expense { color: #A0522D; }
+        .history-actions { display: flex; gap: 5px; }
         .btn-del { color: #B22222; border: 1px solid #B22222; background: none; border-radius: 6px; cursor: pointer; padding: 3px 7px; font-size: 11px; }
-        .btn-edit { color: var(--forest-mid); border: 1px solid var(--forest-mid); background: none; border-radius: 6px; cursor: pointer; padding: 3px 7px; font-size: 11px; margin-right: 5px; }
+        .btn-edit { color: var(--forest-mid); border: 1px solid var(--forest-mid); background: none; border-radius: 6px; cursor: pointer; padding: 3px 7px; font-size: 11px; }
+        
         #loader {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: rgba(255,255,255,0.95); padding: 25px; border-radius: 25px;
@@ -364,7 +381,7 @@
     }
 
     function editData(id) {
-        const item = localData.find(i => i.id === id);
+        const item = localData.find(i => String(i.id) === String(id));
         if (!item) return;
         document.getElementById('date').value = item.date;
         document.getElementById('type').value = item.type;
@@ -409,7 +426,7 @@
             const tempId = new Date().getTime();
             localData.unshift({ ...payload, id: tempId });
         } else {
-            const idx = localData.findIndex(i => i.id === editId);
+            const idx = localData.findIndex(i => String(i.id) === String(editId));
             if (idx !== -1) localData[idx] = { ...localData[idx], ...record };
         }
         
@@ -453,7 +470,7 @@
     }
 
     async function completeReminder(id) {
-        const item = localData.find(i => i.id === id);
+        const item = localData.find(i => String(i.id) === String(id));
         if (!item) return;
         const expenseRecord = {
             action: 'add', 
@@ -464,7 +481,7 @@
             memo: `【提醒完成】${item.memo}`
         };
         
-        localData = localData.filter(i => i.id !== id);
+        localData = localData.filter(i => String(i.id) !== String(id));
         localData.unshift({ ...expenseRecord, id: new Date().getTime() });
         localStorage.setItem('forest_data_cache', JSON.stringify(localData));
         renderUI(localData);
@@ -504,7 +521,7 @@
             const type = item.type || '未知';
             const category = item.category || '未分類';
             const amount = parseFloat(item.amount) || 0;
-            const memo = item.memo || '';
+            const memo = item.memo || '無備註';
             const id = item.id;
 
             if (date.startsWith(currentMonth)) {
@@ -541,35 +558,36 @@
         sortedMonths.forEach(month => {
             const section = document.createElement('div');
             section.className = 'month-section';
+            
             const header = document.createElement('div');
             header.className = 'month-header';
             header.innerHTML = `<span>${month}</span> <i class="fa-solid fa-chevron-down"></i>`;
+            
             const content = document.createElement('div');
             content.className = 'month-content' + (month === currentMonth ? ' active' : '');
             
-            const table = document.createElement('table');
-            // 【修改】增加「類別」欄位標題
-            table.innerHTML = `<thead><tr><th>日期</th><th>類別</th><th>類型</th><th>金額</th><th>操作</th></tr></thead>`;
-            
-            const tbody = document.createElement('tbody');
             grouped[month].forEach(item => {
-                const row = document.createElement('tr');
+                const card = document.createElement('div');
+                card.className = 'history-card';
                 const typeClass = (item.type === '收入') ? 'type-income' : 'type-expense';
-                // 【修改】增加類別內容 ${item.category || '未分類'}
-                row.innerHTML = `
-                    <td>${formatDate(item.date)}</td>
-                    <td>${item.category || '未分類'}</td>
-                    <td class="${typeClass}">${item.type}</td>
-                    <td style="font-weight:bold;">$${item.amount}</td>
-                    <td>
-                        <button class="btn-edit" onclick="editData(${item.id})">修改</button>
-                        <button class="btn-del" onclick="deleteData(${item.id})">刪除</button>
-                    </td>
+                
+                card.innerHTML = `
+                    <div class="history-left">
+                        <span class="history-cat">${item.category || '未分類'}</span>
+                        <span class="history-memo">${item.memo || '無備註'}</span>
+                        <span class="history-date">${formatDate(item.date)}</span>
+                    </div>
+                    <div class="history-right">
+                        <span class="history-amount ${typeClass}">${item.type === '收入' ? '+' : '-'}$${item.amount}</span>
+                        <div class="history-actions">
+                            <button class="btn-edit" onclick="editData(${item.id})">修改</button>
+                            <button class="btn-del" onclick="deleteData(${item.id})">刪除</button>
+                        </div>
+                    </div>
                 `;
-                tbody.appendChild(row);
+                content.appendChild(card);
             });
-            table.appendChild(tbody);
-            content.appendChild(table);
+            
             header.onclick = () => content.classList.toggle('active');
             section.appendChild(header);
             section.appendChild(content);
@@ -581,20 +599,24 @@
     async function deleteData(id) {
         if (!confirm('確定要刪除這筆紀錄嗎？🌿')) return;
         
+        // 儲存備份以便還原
         const previousData = [...localData];
-        localData = localData.filter(i => i.id !== id);
+        
+        // 樂觀更新：立即從 UI 消失
+        localData = localData.filter(i => String(i.id) !== String(id));
         localStorage.setItem('forest_data_cache', JSON.stringify(localData));
         renderUI(localData);
         
         try {
+            // 強制將 ID 轉為字串，確保後端 GAS 能正確比對
             const response = await fetch(API_URL, { 
                 method: 'POST', 
-                body: JSON.stringify({ action: 'delete', id: id }) 
+                body: JSON.stringify({ action: 'delete', id: String(id) }) 
             });
             const result = await response.json();
             if (result.error) throw new Error(result.error);
         } catch (e) {
-            alert('❌ 刪除失敗，資料已還原。');
+            alert('❌ 刪除失敗，資料已還原。請檢查網路連線或 GAS 部署版本。');
             localData = previousData;
             localStorage.setItem('forest_data_cache', JSON.stringify(localData));
             renderUI(localData);
