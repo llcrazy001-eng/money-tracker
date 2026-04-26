@@ -129,7 +129,7 @@
         .month-content { display: none; padding: 10px; }
         .month-content.active { display: block; }
         .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 350px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 400px; }
         th { text-align: left; color: var(--text-muted); padding: 12px 10px; border-bottom: 2px solid #F0F2F0; }
         td { padding: 12px 10px; border-bottom: 1px solid #F9FBF9; }
         .type-income { color: #6B8E23; font-weight: bold; }
@@ -248,7 +248,7 @@
 
     let myChart = null;
     let localData = []; 
-    let editId = null; // 改用 ID
+    let editId = null; 
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
@@ -390,7 +390,6 @@
         const amountStr = document.getElementById('amount').value;
         const amountNum = parseFloat(amountStr);
         
-        // 【Bug 修復】金額必須大於 0
         if (!amountStr || isNaN(amountNum) || amountNum <= 0) {
             return alert('請輸入大於 0 的正確金額唷！🌿');
         }
@@ -406,7 +405,6 @@
         const action = editId ? 'update' : 'add';
         const payload = { action, ...record, id: editId };
 
-        // 樂觀更新 UI
         if (action === 'add') {
             const tempId = new Date().getTime();
             localData.unshift({ ...payload, id: tempId });
@@ -548,14 +546,19 @@
             header.innerHTML = `<span>${month}</span> <i class="fa-solid fa-chevron-down"></i>`;
             const content = document.createElement('div');
             content.className = 'month-content' + (month === currentMonth ? ' active' : '');
+            
             const table = document.createElement('table');
-            table.innerHTML = `<thead><tr><th>日期</th><th>類型</th><th>金額</th><th>操作</th></tr></thead>`;
+            // 【修改】增加「類別」欄位標題
+            table.innerHTML = `<thead><tr><th>日期</th><th>類別</th><th>類型</th><th>金額</th><th>操作</th></tr></thead>`;
+            
             const tbody = document.createElement('tbody');
             grouped[month].forEach(item => {
                 const row = document.createElement('tr');
                 const typeClass = (item.type === '收入') ? 'type-income' : 'type-expense';
+                // 【修改】增加類別內容 ${item.category || '未分類'}
                 row.innerHTML = `
                     <td>${formatDate(item.date)}</td>
+                    <td>${item.category || '未分類'}</td>
                     <td class="${typeClass}">${item.type}</td>
                     <td style="font-weight:bold;">$${item.amount}</td>
                     <td>
