@@ -15,7 +15,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome,6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        /* ... (CSS 部分保持不變) ... */
         :root {
             --forest-deep: #3A5A40;
             --forest-mid: #588157;
@@ -249,7 +248,7 @@
 
     let myChart = null;
     let localData = []; 
-    let editRowId = null; 
+    let editId = null; // 改用 ID
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
@@ -364,8 +363,8 @@
         return null;
     }
 
-    function editData(rowId) {
-        const item = localData.find(i => i.row === rowId);
+    function editData(id) {
+        const item = localData.find(i => i.id === id);
         if (!item) return;
         document.getElementById('date').value = item.date;
         document.getElementById('type').value = item.type;
@@ -374,93 +373,80 @@
         document.getElementById('amount').value = item.amount;
         document.getElementById('memo').value = item.memo;
         renderCategoryButtons(item.type);
-        editRowId = rowId;
+        editId = id;
         document.getElementById('submit-btn').innerText = '更新紀錄 ✨';
         document.getElementById('cancel-btn').style.display = 'block';
         switchTab('add');
     }
 
     function cancelEdit() {
-        editRowId = null;
-        document.getElementById('submit-btn').innerText = '儲存至森林 🍃';
+        editId = null;
+        document.getElementById('submit-btn').innerText = '儲存至聚寶盆💵';
         document.getElementById('cancel-btn').style.display = 'none';
         clearForm();
     }
 
-    /**
-     * 【優化】儲存速度優化：樂觀更新 (Optimistic UI) ＋ 快取同步
-     */
     async function saveData() {
-        const amount = document.getElementById('amount').value;
-        if (!amount) return alert('請輸入金額唷！');
+        const amountStr = document.getElementById('amount').value;
+        const amountNum = parseFloat(amountStr);
+        
+        // 【Bug 修復】金額必須大於 0
+        if (!amountStr || isNaN(amountNum) || amountNum <= 0) {
+            return alert('請輸入大於 0 的正確金額唷！🌿');
+        }
         
         const record = {
             date: document.getElementById('date').value,
             type: document.getElementById('type').value,
             category: document.getElementById('category').value,
-            amount: amount,
+            amount: amountStr,
             memo: document.getElementById('memo').value
         };
 
-        const action = editRowId ? 'update' : 'add';
-        const payload = { action, ...record, row: editRowId };
+        const action = editId ? 'update' : 'add';
+        const payload = { action, ...record, id: editId };
 
+        // 樂觀更新 UI
         if (action === 'add') {
-            localData.unshift({ ...payload, row: -Math.random(), id: new Date().getTime() });
+            const tempId = new Date().getTime();
+            localData.unshift({ ...payload, id: tempId });
         } else {
-            const idx = localData.findIndex(i => i.row === editRowId);
-            localData[idx] = { ...localData[idx], ...record };
+            const idx = localData.findIndex(i => i.id === editId);
+            if (idx !== -1) localData[idx] = { ...localData[idx], ...record };
         }
         
-        // 同步更新本地快取，讓下次開啟也是秒開
         localStorage.setItem('forest_data_cache', JSON.stringify(localData));
-        
         renderUI(localData); 
+        
         cancelEdit();
         switchTab('home');
 
         try {
             const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
             const result = await response.json();
-
-            if (action === 'add') {
-                const item = localData.find(i => i.row < 0); 
-                if (item) item.row = result.row;
-            }
-            // 儲存成功後，再次更新快取以同步正確的 row id
-            localStorage.setItem('forest_data_cache', JSON.stringify(localData));
+            if (result.error) throw new Error(result.error);
         } catch (e) {
             console.error("同步失敗", e);
             alert('⚠️ 儲存失敗，請檢查網路');
         }
     }
 
-    /**
-     * 【關鍵優化】載入邏輯優化：快取優先 (Cache First)
-     * 1. 立即讀取 localStorage
-     * 2. 立即 renderUI (秒開)
-     * 3. 背景請求 GAS 更新最新數據
-     * 4. 收到更新後靜默更新 UI
-     */
     async function loadData() {
-        // Step 1: 嘗試讀取本地快取
         const cached = localStorage.getItem('forest_data_cache');
         if (cached) {
             localData = JSON.parse(cached);
-            renderUI(localData); // 立即渲染，使用者感覺秒開
+            renderUI(localData);
         } else {
             document.getElementById('loader').style.display = 'block';
             document.getElementById('loader').innerText = '🌿 森林正在喚醒錢錢...💰';
         }
 
-        // Step 2: 在背景向 GAS 請求最新數據
         try {
             const response = await fetch(API_URL);
             const freshData = await response.json();
-            
             localData = freshData;
             localStorage.setItem('forest_data_cache', JSON.stringify(freshData));
-            renderUI(localData); // 靜默更新畫面
+            renderUI(localData);
         } catch (e) {
             console.error('同步失敗', e);
         } finally {
@@ -468,8 +454,8 @@
         }
     }
 
-    async function completeReminder(rowId) {
-        const item = localData.find(i => i.row === rowId);
+    async function completeReminder(id) {
+        const item = localData.find(i => i.id === id);
         if (!item) return;
         const expenseRecord = {
             action: 'add', 
@@ -480,20 +466,14 @@
             memo: `【提醒完成】${item.memo}`
         };
         
-        localData = localData.filter(i => i.row !== rowId);
-        localData.unshift({ ...expenseRecord, row: -Math.random() });
-        
+        localData = localData.filter(i => i.id !== id);
+        localData.unshift({ ...expenseRecord, id: new Date().getTime() });
         localStorage.setItem('forest_data_cache', JSON.stringify(localData));
         renderUI(localData);
 
         try {
             const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(expenseRecord) });
-            const result = await res.json();
-            const newItem = localData.find(i => i.row < 0);
-            if (newItem) newItem.row = result.row;
-            
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', row: rowId }) });
-            localStorage.setItem('forest_data_cache', JSON.stringify(localData));
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: id }) });
         } catch (e) {
             alert('同步失敗');
         }
@@ -527,7 +507,7 @@
             const category = item.category || '未分類';
             const amount = parseFloat(item.amount) || 0;
             const memo = item.memo || '';
-            const rowId = item.row;
+            const id = item.id;
 
             if (date.startsWith(currentMonth)) {
                 if (type === '收入') mIncome += amount;
@@ -538,7 +518,7 @@
                 remList.innerHTML += `
                     <div class="reminder-item">
                         <div class="reminder-content">
-                            <input type="checkbox" class="reminder-checkbox" onchange="if(this.checked) completeReminder(${rowId})">
+                            <input type="checkbox" class="reminder-checkbox" onchange="if(this.checked) completeReminder(${id})">
                             <div class="reminder-info">
                                 <span class="reminder-cat">${category}</span>
                                 <span>${memo}</span>
@@ -579,8 +559,8 @@
                     <td class="${typeClass}">${item.type}</td>
                     <td style="font-weight:bold;">$${item.amount}</td>
                     <td>
-                        <button class="btn-edit" onclick="editData(${item.row})">修改</button>
-                        <button class="btn-del" onclick="deleteData(${item.row})">刪除</button>
+                        <button class="btn-edit" onclick="editData(${item.id})">修改</button>
+                        <button class="btn-del" onclick="deleteData(${item.id})">刪除</button>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -595,15 +575,26 @@
         renderChart(chartData);
     }
 
-    async function deleteData(rowId) {
-        if (!confirm('確定要刪除嗎？')) return;
-        localData = localData.filter(i => i.row !== rowId);
+    async function deleteData(id) {
+        if (!confirm('確定要刪除這筆紀錄嗎？🌿')) return;
+        
+        const previousData = [...localData];
+        localData = localData.filter(i => i.id !== id);
         localStorage.setItem('forest_data_cache', JSON.stringify(localData));
         renderUI(localData);
+        
         try {
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', row: rowId }) });
+            const response = await fetch(API_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'delete', id: id }) 
+            });
+            const result = await response.json();
+            if (result.error) throw new Error(result.error);
         } catch (e) {
-            alert('刪除失敗');
+            alert('❌ 刪除失敗，資料已還原。');
+            localData = previousData;
+            localStorage.setItem('forest_data_cache', JSON.stringify(localData));
+            renderUI(localData);
         }
     }
 
