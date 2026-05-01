@@ -131,6 +131,10 @@
             font-weight: bold; color: var(--forest-deep); border-radius: 15px;
             margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
+        .month-header .month-total {
+            font-size: 13px; background: rgba(255,255,255,0.5); 
+            padding: 2px 8px; border-radius: 10px; margin: 0 10px;
+        }
         .month-content { display: none; gap: 12px; flex-direction: column; }
         .month-content.active { display: flex; }
         
@@ -559,13 +563,25 @@
             const section = document.createElement('div');
             section.className = 'month-section';
             
+            // --- 計算該月份總支出 ---
+            const monthTotalExpense = grouped[month]
+                .filter(item => item.type === '支出')
+                .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+
             const header = document.createElement('div');
             header.className = 'month-header';
-            header.innerHTML = `<span>${month}</span> <i class="fa-solid fa-chevron-down"></i>`;
+            header.innerHTML = `
+                <span>${month}</span> 
+                <span class="month-total">本月支出: $${monthTotalExpense.toLocaleString()}</span>
+                <i class="fa-solid fa-chevron-down"></i>
+            `;
             
             const content = document.createElement('div');
             content.className = 'month-content' + (month === currentMonth ? ' active' : '');
             
+            // --- 排序：最新的日期放在最上面 ---
+            grouped[month].sort((a, b) => new Date(b.date) - new Date(a.date));
+
             grouped[month].forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'history-card';
@@ -599,16 +615,12 @@
     async function deleteData(id) {
         if (!confirm('確定要刪除這筆紀錄嗎？🌿')) return;
         
-        // 儲存備份以便還原
         const previousData = [...localData];
-        
-        // 樂觀更新：立即從 UI 消失
         localData = localData.filter(i => String(i.id) !== String(id));
         localStorage.setItem('forest_data_cache', JSON.stringify(localData));
         renderUI(localData);
         
         try {
-            // 強制將 ID 轉為字串，確保後端 GAS 能正確比對
             const response = await fetch(API_URL, { 
                 method: 'POST', 
                 body: JSON.stringify({ action: 'delete', id: String(id) }) 
