@@ -499,118 +499,126 @@
     }
 
     function renderUI(data) {
-        const remList = document.getElementById('reminders-list');
-        const historyContainer = document.getElementById('history-accordion');
-        remList.innerHTML = '';
-        historyContainer.innerHTML = '';
-        const chartData = {};
+    const remList = document.getElementById('reminders-list');
+    const historyContainer = document.getElementById('history-accordion');
+    remList.innerHTML = '';
+    historyContainer.innerHTML = '';
+    const chartData = {};
 
-        const now = new Date();
-        const currentMonth = now.toISOString().slice(0, 7); 
-        let mIncome = 0, mExpense = 0;
+    const now = new Date();
+    const currentMonth = now.toISOString().slice(0, 7); 
+    let mIncome = 0, mExpense = 0;
 
-        const formatDate = (dateInput) => {
-            if (!dateInput) return '無日期';
-            try {
-                const d = new Date(dateInput);
-                if (isNaN(d.getTime())) return dateInput;
-                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            } catch (e) { return dateInput; }
-        };
+    const formatDate = (dateInput) => {
+        if (!dateInput) return '無日期';
+        try {
+            const d = new Date(dateInput);
+            if (isNaN(d.getTime())) return dateInput;
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        } catch (e) { return dateInput; }
+    };
 
-        const grouped = {};
+    const grouped = {};
 
-        data.forEach(item => {
-            const date = formatDate(item.date);
-            const type = item.type || '未知';
-            const category = item.category || '未分類';
-            const amount = parseFloat(item.amount) || 0;
-            const memo = item.memo || '無備註';
-            const id = item.id;
+    data.forEach(item => {
+        const date = formatDate(item.date);
+        const type = item.type || '未知';
+        const category = item.category || '未分類';
+        const amount = parseFloat(item.amount) || 0;
+        const memo = item.memo || '無備註';
+        const id = item.id;
 
-            if (date.startsWith(currentMonth)) {
-                if (type === '收入') mIncome += amount;
-                if (type === '支出') mExpense += amount;
+        // --- 修改點 1：首頁本月總支出 = 支出 + 提醒 ---
+        if (date.startsWith(currentMonth)) {
+            if (type === '收入') {
+                mIncome += amount;
+            } else if (type === '支出' || type === '提醒') {
+                mExpense += amount;
             }
+        }
 
-            if (type === '提醒') {
-                remList.innerHTML += `
-                    <div class="reminder-item">
-                        <div class="reminder-content">
-                            <input type="checkbox" class="reminder-checkbox" onchange="if(this.checked) completeReminder(${id})">
-                            <div class="reminder-info">
-                                <span class="reminder-cat">${category}</span>
-                                <span>${memo}</span>
-                            </div>
+        if (type === '提醒') {
+            remList.innerHTML += `
+                <div class="reminder-item">
+                    <div class="reminder-content">
+                        <input type="checkbox" class="reminder-checkbox" onchange="if(this.checked) completeReminder(${id})">
+                        <div class="reminder-info">
+                            <span class="reminder-cat">${category}</span>
+                            <span>${memo}</span>
                         </div>
-                        <div><span class="reminder-date">${date}</span> <span style="margin-left:10px">$${amount}</span></div>
-                    </div>`;
-            } else {
-                const month = date.substring(0, 7);
-                if (!grouped[month]) grouped[month] = [];
-                grouped[month].push(item);
-                if (type === '支出') chartData[category] = (chartData[category] || 0) + amount;
-            }
-        });
+                    </div>
+                    <div><span class="reminder-date">${date}</span> <span style="margin-left:10px">$${amount}</span></div>
+                </div>`;
+        } else {
+            const month = date.substring(0, 7);
+            if (!grouped[month]) grouped[month] = [];
+            grouped[month].push(item);
+            if (type === '支出') chartData[category] = (chartData[category] || 0) + amount;
+        }
+    });
 
-        document.getElementById('month-income').innerText = `$ ${mIncome.toLocaleString()}`;
-        document.getElementById('month-expense').innerText = `$ ${mExpense.toLocaleString()}`;
+    document.getElementById('month-income').innerText = `$ ${mIncome.toLocaleString()}`;
+    document.getElementById('month-expense').innerText = `$ ${mExpense.toLocaleString()}`;
 
-        if (remList.innerHTML === '') remList.innerHTML = '<p style="text-align:center; color:#AAA; font-size:12px; padding:10px;">目前沒有提醒事項 🍃</p>';
+    if (remList.innerHTML === '') remList.innerHTML = '<p style="text-align:center; color:#AAA; font-size:12px; padding:10px;">目前沒有提醒事項 🍃</p>';
 
-        const sortedMonths = Object.keys(grouped).sort().reverse();
-        sortedMonths.forEach(month => {
-            const section = document.createElement('div');
-            section.className = 'month-section';
+    const sortedMonths = Object.keys(grouped).sort().reverse();
+    sortedMonths.forEach(month => {
+        const section = document.createElement('div');
+        section.className = 'month-section';
+        
+        // --- 修改點 2：歷史分頁每月總支出 = 支出 + 提醒 ---
+        // 注意：由於提醒項目在上面的 loop 中被分到了 remList 而沒有進入 grouped
+        // 我們需要重新從原始 data 中找出該月份的所有「支出」與「提醒」
+        const monthTotalExpense = data
+            .filter(item => {
+                const itemDate = formatDate(item.date);
+                return itemDate.startsWith(month) && (item.type === '支出' || item.type === '提醒');
+            })
+            .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+
+        const header = document.createElement('div');
+        header.className = 'month-header';
+        header.innerHTML = `
+            <span>${month}</span> 
+            <span class="month-total">本月總支出: $${monthTotalExpense.toLocaleString()}</span>
+            <i class="fa-solid fa-chevron-down"></i>
+        `;
+        
+        const content = document.createElement('div');
+        content.className = 'month-content' + (month === currentMonth ? ' active' : '');
+        
+        grouped[month].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        grouped[month].forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'history-card';
+            const typeClass = (item.type === '收入') ? 'type-income' : 'type-expense';
             
-            // --- 計算該月份總支出 ---
-            const monthTotalExpense = grouped[month]
-                .filter(item => item.type === '支出')
-                .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-
-            const header = document.createElement('div');
-            header.className = 'month-header';
-            header.innerHTML = `
-                <span>${month}</span> 
-                <span class="month-total">本月支出: $${monthTotalExpense.toLocaleString()}</span>
-                <i class="fa-solid fa-chevron-down"></i>
+            card.innerHTML = `
+                <div class="history-left">
+                    <span class="history-cat">${item.category || '未分類'}</span>
+                    <span class="history-memo">${item.memo || '無備註'}</span>
+                    <span class="history-date">${formatDate(item.date)}</span>
+                </div>
+                <div class="history-right">
+                    <span class="history-amount ${typeClass}">${item.type === '收入' ? '+' : '-'}$${item.amount}</span>
+                    <div class="history-actions">
+                        <button class="btn-edit" onclick="editData(${item.id})">修改</button>
+                        <button class="btn-del" onclick="deleteData(${item.id})">刪除</button>
+                    </div>
+                </div>
             `;
-            
-            const content = document.createElement('div');
-            content.className = 'month-content' + (month === currentMonth ? ' active' : '');
-            
-            // --- 排序：最新的日期放在最上面 ---
-            grouped[month].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            grouped[month].forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'history-card';
-                const typeClass = (item.type === '收入') ? 'type-income' : 'type-expense';
-                
-                card.innerHTML = `
-                    <div class="history-left">
-                        <span class="history-cat">${item.category || '未分類'}</span>
-                        <span class="history-memo">${item.memo || '無備註'}</span>
-                        <span class="history-date">${formatDate(item.date)}</span>
-                    </div>
-                    <div class="history-right">
-                        <span class="history-amount ${typeClass}">${item.type === '收入' ? '+' : '-'}$${item.amount}</span>
-                        <div class="history-actions">
-                            <button class="btn-edit" onclick="editData(${item.id})">修改</button>
-                            <button class="btn-del" onclick="deleteData(${item.id})">刪除</button>
-                        </div>
-                    </div>
-                `;
-                content.appendChild(card);
-            });
-            
-            header.onclick = () => content.classList.toggle('active');
-            section.appendChild(header);
-            section.appendChild(content);
-            historyContainer.appendChild(section);
+            content.appendChild(card);
         });
-        renderChart(chartData);
-    }
+        
+        header.onclick = () => content.classList.toggle('active');
+        section.appendChild(header);
+        section.appendChild(content);
+        historyContainer.appendChild(section);
+    });
+    renderChart(chartData);
+}
 
     async function deleteData(id) {
         if (!confirm('確定要刪除這筆紀錄嗎？🌿')) return;
